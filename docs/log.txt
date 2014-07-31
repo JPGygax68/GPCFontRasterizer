@@ -1,0 +1,10 @@
+2014-07-31
+==========
+
+It's surprising how much complexity is trying to seep into this simple tool. I must remember not to let myself get carried away.
+
+For example, FreeType has a feature to add multiple font files to a face object, and it might be tempting to use that to get bold and italic versions of a font into a single RasterizedFont structure.
+
+However, that could potentially be very uncomfortable if the font files are not strictly "parallel" in the sense that they carry the same glyphs in the same order: the RasterizedFont structure simply couldn't handle that.
+
+So, keeping font variants together is a future task for a higher-level structure, perhaps to be called FontIndex or similar.

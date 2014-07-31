@@ -35,6 +35,12 @@ foreach(p LIB BIN INCLUDE CMAKE)
 endforeach()
 
 #------------------------------------------------
+# Libraries
+#
+
+include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/cereal/include )
+
+#------------------------------------------------
 # Target: executable
 #
 

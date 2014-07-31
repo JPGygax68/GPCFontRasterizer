@@ -11,6 +11,8 @@
 #include FT_GLYPH_H
 #include FT_ERRORS_H
 
+#include <cereal/cereal.hpp>
+
 #include <gpc/fonts/RasterizedGlyphCBox.hpp>
 #include <gpc/fonts/GlyphRange.hpp>
 #include <gpc/fonts/RasterizedFont.hpp>
@@ -105,6 +107,27 @@ int main(int argc, const char *argv[])
 
         cout << "Font file contains " << face->num_faces << " face(s)." << endl;
         cout << "This face contains " << face->num_glyphs << " glyphs." << endl;
+		cout << "Face flags:";
+		if ((face->face_flags & FT_FACE_FLAG_SCALABLE        ) != 0) cout << " scalable";
+		if ((face->face_flags & FT_FACE_FLAG_FIXED_SIZES     ) != 0) cout << " fixed sizes";
+		if ((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH     ) != 0) cout << " fixed width";
+		if ((face->face_flags & FT_FACE_FLAG_SFNT            ) != 0) cout << " SFNT";
+		if ((face->face_flags & FT_FACE_FLAG_HORIZONTAL      ) != 0) cout << " horizontal";
+		if ((face->face_flags & FT_FACE_FLAG_VERTICAL        ) != 0) cout << " vertical";
+		if ((face->face_flags & FT_FACE_FLAG_KERNING         ) != 0) cout << " kerning";
+		if ((face->face_flags & FT_FACE_FLAG_FAST_GLYPHS     ) != 0) cout << " fast_glyphs";
+		if ((face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) != 0) cout << " multiple_masters";
+		if ((face->face_flags & FT_FACE_FLAG_GLYPH_NAMES     ) != 0) cout << " glyph_names";
+		if ((face->face_flags & FT_FACE_FLAG_EXTERNAL_STREAM ) != 0) cout << " external stream";
+		if ((face->face_flags & FT_FACE_FLAG_HINTER          ) != 0) cout << " hinter";
+		if ((face->face_flags & FT_FACE_FLAG_CID_KEYED       ) != 0) cout << " CID_keyed";
+		if ((face->face_flags & FT_FACE_FLAG_TRICKY          ) != 0) cout << " tricky";
+		if ((face->face_flags & FT_FACE_FLAG_COLOR           ) != 0) cout << " color";
+		cout << endl;
+		cout << "Style flags: ";
+		if ((face->style_flags & FT_STYLE_FLAG_BOLD          ) != 0) cout << " bold";
+		if ((face->style_flags & FT_STYLE_FLAG_ITALIC        ) != 0) cout << " italic";
+		cout << endl;
         if ((face->face_flags & FT_FACE_FLAG_SCALABLE)) cout << "This font is scalable" << endl;
         cout << "Units per EM: " << face->units_per_EM << endl;
         cout << "Number of fixed sizes: " << face->num_fixed_sizes << endl;
@@ -124,9 +147,6 @@ int main(int argc, const char *argv[])
             FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
             if (glyph_index > 0) {
 
-				cout << endl;
-				cout << "Glyph for codepoint " << cp << " at index " << glyph_index << ":" << endl;
-
 				// Add this codepoint to the range, or begin a new range
 				if (cp > next_codepoint) rast_font.index.emplace_back<GlyphRange>({ cp, 0 });
 				GlyphRange &range = rast_font.index.back();
@@ -136,8 +156,6 @@ int main(int argc, const char *argv[])
 				// Repeat for each pixel size  TODO: not just sizes, styles too (bold/italic)
 				auto i_var = 0;
 				for (auto size : sizes) {
-
-					cout << "Generating bitmap for size = " << size << endl;
 
 					// Select font size (in pixels)
 					fterror = FT_Set_Pixel_Sizes(face, 0, size);
@@ -158,18 +176,20 @@ int main(int argc, const char *argv[])
 					auto &pixels = variant.pixels;
 
 					variant.glyphs.emplace_back<RasterizedFont::GlyphRecord>({
-							{
-								bitmap.width, bitmap.rows,
-								slot->bitmap_left, slot->bitmap_top,
-								slot->advance.x >> 6, slot->advance.y >> 6
-							},
-							variant.pixels.size()
+						{
+							bitmap.width, bitmap.rows,
+							slot->bitmap_left, slot->bitmap_top,
+							slot->advance.x >> 6, slot->advance.y >> 6
+						},
+						variant.pixels.size()
 					});
 
 					auto &cbox = variant.glyphs.back().cbox;
-					cout << "width : " << cbox.width << ", height: " << cbox.rows << endl;
-					cout << "left  : " << cbox.left << ", top:    " << cbox.top << endl;
-					cout << "adv x : " << cbox.adv_x << ", adv y:  " << cbox.adv_y << endl;
+					cout << "Codepoint: " << cp << ", " << "glyph: " << glyph_index << " " << "at size " << size << ": "
+						 << "width: "  << cbox.width << ", " << "height: " << cbox.rows << ", "
+						 << "left: "   << cbox.left  << ", " << "top: "    << cbox.top  << ", "
+						 << "adv_x : " << cbox.adv_x << ", " << "adv_y: "  << cbox.adv_y 
+						 << endl;
 
 					// Copy the pixels
 					uint32_t pixel_base = pixels.size();
