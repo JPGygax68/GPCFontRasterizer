@@ -10,6 +10,12 @@ add_executable(GPCFontRasterizer ${SOURCES})
 # Libraries
 #
 
+# GPC Fonts
+
+find_package(gpc_fonts REQUIRED)
+message("gpc_fonts include dirs: " ${gpc_fonts_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${gpc_fonts_INCLUDE_DIRS})
+
 # Boost
 
 find_package(boost COMPONENTS filesystem REQUIRED)
