@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <cstdint>
+#include <set>
 
 #include <boost/filesystem.hpp>
 
@@ -71,21 +72,26 @@ int main(int argc, const char *argv[])
     try {
 
         string font_file;
+		set<uint16_t> sizes;
 
         // Get command-line arguments
         for (auto i = 1; i < argc; i ++) {
             auto name_value = splitParam(argv[i]);
             if (name_value.first == "file") {
-                cout << "file = " << name_value.second << endl;
-                font_file = findFontFile(name_value.second);
-                cout << "font file path = " << font_file << endl;
+                //cout << "file = " << name_value.second << endl;
+				//cout << "font file path = " << font_file << endl;
+				font_file = findFontFile(name_value.second);
             }
+			else if (name_value.first == "size") {
+				sizes.insert(stoi(name_value.second));
+			}
             else {
                 throw runtime_error(string("invalid parameter \"") + argv[i] + "\"");
             }
         }
 
-        if (font_file.size() == 0) throw runtime_error("No font file specified!");
+        if (font_file.empty()) throw runtime_error("No font file specified!");
+		if (sizes.empty()) throw runtime_error("No sizes specified!");
 
         FT_Library library;
         FT_Error fterror;
@@ -107,7 +113,7 @@ int main(int argc, const char *argv[])
         //if (fterror) throw runtime_error("Failed to set character size (in 64ths of point)");
 
 		RasterizedFont rast_font;
-		rast_font.variants.resize(1); // TODO: support more variants!
+		rast_font.variants.resize(sizes.size()); // TODO: support styles, not just sizes
 
 		uint32_t glyph_count = 0, missing_count = 0;
 		uint32_t next_codepoint = 0;
@@ -118,56 +124,67 @@ int main(int argc, const char *argv[])
             FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
             if (glyph_index > 0) {
 
+				cout << endl;
+				cout << "Glyph for codepoint " << cp << " at index " << glyph_index << ":" << endl;
+
 				// Add this codepoint to the range, or begin a new range
 				if (cp > next_codepoint) rast_font.index.emplace_back<GlyphRange>({ cp, 0 });
 				GlyphRange &range = rast_font.index.back();
 				range.count++;
 				next_codepoint = cp + 1;
 
-				// Select font size (in pixels)
-				fterror = FT_Set_Pixel_Sizes(face, 0, 14);
-				if (fterror) throw runtime_error("Failed to set character size (in pixels)");
+				// Repeat for each pixel size  TODO: not just sizes, styles too (bold/italic)
+				auto i_var = 0;
+				for (auto size : sizes) {
 
-				// TODO: loop over all sizes
+					cout << "Generating bitmap for size = " << size << endl;
 
-				fterror = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-				if (fterror) throw runtime_error("Failed to get glyph");
+					// Select font size (in pixels)
+					fterror = FT_Set_Pixel_Sizes(face, 0, size);
+					if (fterror) throw runtime_error("Failed to set character size (in pixels)");
 
-				fterror = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-                if (fterror) throw runtime_error("Failed to render loaded glyph");
+					fterror = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+					if (fterror) throw runtime_error("Failed to get glyph");
 
-				FT_GlyphSlot slot = face->glyph;
-                FT_Bitmap &bitmap = slot->bitmap;
+					fterror = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+					if (fterror) throw runtime_error("Failed to render loaded glyph");
 
-				assert((slot->advance.x & 0x3f) == 0);
+					FT_GlyphSlot slot = face->glyph;
+					FT_Bitmap &bitmap = slot->bitmap;
 
-				auto variant = rast_font.variants.back(); // TODO: multiple variants!
+					assert((slot->advance.x & 0x3f) == 0);
 
-				variant.glyphs.emplace_back<RasterizedFont::GlyphRecord>({ 
-					{
-						bitmap.width, bitmap.rows,
-						slot->bitmap_left, slot->bitmap_top,
-						slot->advance.x >> 6, slot->advance.y >> 6
-					},	
-					variant.pixels.size()
-				} );
+					auto variant = rast_font.variants[i_var];
+					auto &pixels = variant.pixels;
 
-				cout << "Glyph for codepoint " << cp << " at index " << glyph_index << ":" << endl;
-				auto &cbox = variant.glyphs.back().cbox;
-				cout << "width : " << cbox.width << ", height: " << cbox.rows  << endl;
-				cout << "left  : " << cbox.left  << ", top:    " << cbox.top   << endl;
-				cout << "adv x : " << cbox.adv_x << ", adv y:  " << cbox.adv_y << endl;
+					variant.glyphs.emplace_back<RasterizedFont::GlyphRecord>({
+							{
+								bitmap.width, bitmap.rows,
+								slot->bitmap_left, slot->bitmap_top,
+								slot->advance.x >> 6, slot->advance.y >> 6
+							},
+							variant.pixels.size()
+					});
 
-				// Copy the pixels
-				auto &pixels = variant.pixels;
-				uint32_t pixel_base = pixels.size();
-				pixels.resize(pixel_base + cbox.width * cbox.rows);
-				auto dit = pixels.begin() + pixel_base;
-				auto sit = bitmap.buffer;
-				for (int i = 0; i < bitmap.rows; i++, sit += bitmap.pitch)
-					for (int j = 0; j < bitmap.width; j++) *dit++ = sit[j];
+					auto &cbox = variant.glyphs.back().cbox;
+					cout << "width : " << cbox.width << ", height: " << cbox.rows << endl;
+					cout << "left  : " << cbox.left << ", top:    " << cbox.top << endl;
+					cout << "adv x : " << cbox.adv_x << ", adv y:  " << cbox.adv_y << endl;
 
-				glyph_count++;
+					// Copy the pixels
+					uint32_t pixel_base = pixels.size();
+					pixels.resize(pixel_base + cbox.width * cbox.rows);
+					auto dit = pixels.begin() + pixel_base;
+					auto sit = bitmap.buffer;
+					for (int i = 0; i < bitmap.rows; i++, sit += bitmap.pitch)
+						for (int j = 0; j < bitmap.width; j++) *dit++ = sit[j];
+
+					glyph_count++;
+
+					// Next variant (size)
+					i_var++;
+
+				} // each pixel size
             }
             else {
                 cout << "No glyph for codepoint " << cp << endl;
