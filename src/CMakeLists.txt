@@ -12,7 +12,7 @@ add_executable(GPCFontRasterizer ${SOURCES})
 
 # GPC Fonts
 
-find_package(gpc_fonts REQUIRED)
+find_package(gpc_fonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
 message("gpc_fonts include dirs: " ${gpc_fonts_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${gpc_fonts_INCLUDE_DIRS})
 
