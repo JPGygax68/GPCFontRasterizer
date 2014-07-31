@@ -11,6 +11,7 @@
 #include FT_ERRORS_H
 
 #include <gpc/fonts/RasterGlyphCBox.hpp>
+#include <gpc/fonts/GlyphRange.hpp>
 
 typedef std::pair<std::string, std::string> NameValuePair;
 
@@ -60,7 +61,8 @@ static auto findFontFile(const std::string &file) -> std::string {
 int main(int argc, const char *argv[])
 {
     using namespace std;
-    using gpc::fonts::RasterGlyphCBox;
+	using gpc::fonts::RasterGlyphCBox;
+	using gpc::fonts::GlyphRange;
 
     int exit_code = -1;
 
@@ -107,17 +109,18 @@ int main(int argc, const char *argv[])
         if (fterror) throw runtime_error("Failed to set character size (in pixels)");
 
         std::vector<RasterGlyphCBox> glyph_boxes;
-		std::vector<uint32_t> glyph_indices; // indices in the rasterized font, NOT in the font file!
+		std::vector<GlyphRange> glyph_ranges;
+		std::vector<uint8_t> pixels;
+		std::vector<uint32_t> pixel_offsets; // single size for now
 
 		uint32_t glyph_count = 0, missing_count = 0;
+		uint32_t next_codepoint = 0;
 
         // Generate bitmaps for the whole character set
-        for (unsigned int cp = 32; cp <= 255; cp++) {
+        for (uint32_t cp = 32; cp <= 255; cp++) {
 
             FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
             if (glyph_index > 0) {
-
-                cout << "Glyph index of code point " << cp << " is " << glyph_index << endl;
 
                 fterror = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
                 if (fterror) throw runtime_error("Failed to get glyph");
@@ -128,28 +131,51 @@ int main(int argc, const char *argv[])
 				FT_GlyphSlot slot = face->glyph;
                 FT_Bitmap &bitmap = slot->bitmap;
 
-                glyph_boxes.emplace_back<RasterGlyphCBox>( { 
+				assert((slot->advance.x & 0x3f) == 0);
+
+				glyph_boxes.emplace_back<RasterGlyphCBox>({
 					bitmap.width, bitmap.rows, 
 					slot->bitmap_left, slot->bitmap_top, 
-					slot->advance.x, slot->advance.y
+					slot->advance.x >> 6, slot->advance.y >> 6
 				} );
 
-				glyph_indices.emplace_back(glyph_count++);
+				cout << "Glyph for codepoint " << cp << " at index " << glyph_index << ":" << endl;
+				auto &cbox = glyph_boxes.back();
+				cout << "width : " << cbox.width << ", height: " << cbox.rows  << endl;
+				cout << "left  : " << cbox.left  << ", top:    " << cbox.top   << endl;
+				cout << "adv x : " << cbox.adv_x << ", adv y:  " << cbox.adv_y << endl;
+
+				// Add this codepoint to the range, or begin a new range
+				if (cp > next_codepoint) glyph_ranges.emplace_back<GlyphRange>({ cp, 0 });
+				GlyphRange &range = glyph_ranges.back();
+				range.count++;
+				next_codepoint = cp + 1;
+
+				// Copy the pixels
+				uint32_t pixel_base = pixels.size();
+				pixels.resize(pixel_base + cbox.width * cbox.rows);
+				auto dit = pixels.begin() + pixel_base;
+				auto sit = bitmap.buffer;
+				for (int i = 0; i < bitmap.rows; i++, sit += bitmap.pitch)
+					for (int j = 0; j < bitmap.width; j++) *dit++ = sit[j];
             }
             else {
                 cout << "No glyph for codepoint " << cp << endl;
 				missing_count++;
             }
         }
-        //SDL::Texture texture = (SDL::textureFromGrayscaleBitmap(renderer, SDL_PIXELFORMAT_RGBA8888, bitmap->width, bitmap->rows, bitmap->buffer, bitmap->pitch));
 
-		cout << "Total number of glyphs:   " << glyph_count << endl;
-		cout << "Codepoints without glyph: " << missing_count << endl;
+		cout << endl;
+		cout << "Total number of glyphs:               " << glyph_count << endl;
+		cout << "Number of glyph ranges:               " << glyph_ranges.size() << endl;
+		cout << "Total number of codepoints not found: " << missing_count << endl;
+		cout << "Total number of pixels:               " << pixels.size() << endl;
     }
     catch(exception &e) {
         cerr << "Error: " << e.what() << endl;
     }
 
+	cout << endl;
     cout << "Press RETURN to terminate" << endl;
     cin.ignore();
 
