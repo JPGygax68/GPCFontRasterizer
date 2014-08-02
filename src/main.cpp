@@ -73,19 +73,23 @@ int main(int argc, const char *argv[])
 
     try {
 
-        string font_file;
+        string font_file, output_file;
 		set<uint16_t> sizes;
 
         // Get command-line arguments
         for (auto i = 1; i < argc; i ++) {
             auto name_value = splitParam(argv[i]);
-            if (name_value.first == "file") {
+			auto &name = name_value.first, &value = name_value.second;
+            if (name == "input") {
                 //cout << "file = " << name_value.second << endl;
 				//cout << "font file path = " << font_file << endl;
-				font_file = findFontFile(name_value.second);
+				font_file = findFontFile(value);
             }
-			else if (name_value.first == "size") {
-				sizes.insert(stoi(name_value.second));
+			else if (name == "size") {
+				sizes.insert(stoi(value));
+			}
+			else if (name == "output") {
+				output_file = value;
 			}
             else {
                 throw runtime_error(string("invalid parameter \"") + argv[i] + "\"");
@@ -94,6 +98,7 @@ int main(int argc, const char *argv[])
 
         if (font_file.empty()) throw runtime_error("No font file specified!");
 		if (sizes.empty()) throw runtime_error("No sizes specified!");
+		if (output_file.empty()) throw runtime_error("No output file specified!");
 
         FT_Library library;
         FT_Error fterror;
@@ -141,21 +146,48 @@ int main(int argc, const char *argv[])
 		uint32_t glyph_count = 0, missing_count = 0;
 		uint32_t next_codepoint = 0;
 
-        // Generate bitmaps for the whole character set
-        for (uint32_t cp = 32; cp <= 255; cp++) {
+        // Find out what glyphs can be found in this font file
 
-            FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
-            if (glyph_index > 0) {
+		for (uint32_t cp = 32; cp <= 255; cp++) {
+
+			FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
+			if (glyph_index > 0) {
 
 				// Add this codepoint to the range, or begin a new range
 				if (cp > next_codepoint) rast_font.index.emplace_back<GlyphRange>({ cp, 0 });
 				GlyphRange &range = rast_font.index.back();
 				range.count++;
 				next_codepoint = cp + 1;
+				glyph_count++;
+			}
+			else {
+				cout << "No glyph for codepoint " << cp << endl;
+				missing_count++;
+			}
+		}
 
-				// Repeat for each pixel size  TODO: not just sizes, styles too (bold/italic)
-				auto i_var = 0;
-				for (auto size : sizes) {
+		cout << endl;
+		cout << "Total number of glyphs:               " << glyph_count << endl;
+		cout << "Number of glyph ranges:               " << rast_font.index.size() << endl;
+		cout << "Total number of codepoints not found: " << missing_count << endl;
+
+		// Repeat for each pixel size
+		
+		int max_ascender = 0;
+		int max_descender = 0;
+		auto i_size = 0;
+
+		for (auto size : sizes) {
+
+			for (auto const &range : rast_font.index) {
+
+				for (size_t i = 0; i < range.count; i++) {
+
+					// Codepoint
+					uint32_t cp = range.starting_codepoint + i;
+
+					// Get glyph index (again)
+					FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
 
 					// Select font size (in pixels)
 					fterror = FT_Set_Pixel_Sizes(face, 0, size);
@@ -172,8 +204,13 @@ int main(int argc, const char *argv[])
 
 					assert((slot->advance.x & 0x3f) == 0);
 
-					auto variant = rast_font.variants[i_var];
+					auto &variant = rast_font.variants[i_size];
 					auto &pixels = variant.pixels;
+
+					int ascender = slot->bitmap_top;
+					int descender = slot->bitmap.rows - slot->bitmap_top;
+					if (ascender > max_ascender) max_ascender = ascender;
+					if (descender > max_descender) max_descender = descender;
 
 					variant.glyphs.emplace_back<RasterizedFont::GlyphRecord>({
 						{
@@ -185,11 +222,14 @@ int main(int argc, const char *argv[])
 					});
 
 					auto &cbox = variant.glyphs.back().cbox;
+					/*
 					cout << "Codepoint: " << cp << ", " << "glyph: " << glyph_index << " " << "at size " << size << ": "
-						 << "width: "  << cbox.width << ", " << "height: " << cbox.rows << ", "
-						 << "left: "   << cbox.left  << ", " << "top: "    << cbox.top  << ", "
-						 << "adv_x : " << cbox.adv_x << ", " << "adv_y: "  << cbox.adv_y 
+						 << "width: "     << cbox.width << ", " << "height: "  << cbox.rows  << ", "
+						 << "left: "      << cbox.left  << ", " << "top: "     << cbox.top   << ", "
+						 << "adv_x : "    << cbox.adv_x << ", " << "adv_y: "   << cbox.adv_y << ", "
+						 << "ascent: "    << ascender   << ", " << "descent: " << descender
 						 << endl;
+					*/
 
 					// Copy the pixels
 					uint32_t pixel_base = pixels.size();
@@ -199,25 +239,22 @@ int main(int argc, const char *argv[])
 					for (int i = 0; i < bitmap.rows; i++, sit += bitmap.pitch)
 						for (int j = 0; j < bitmap.width; j++) *dit++ = sit[j];
 
-					glyph_count++;
+				} // each character in the range
 
-					// Next variant (size)
-					i_var++;
+		    } // each range
 
-				} // each pixel size
-            }
-            else {
-                cout << "No glyph for codepoint " << cp << endl;
-				missing_count++;
-            }
-        }
+			cout << endl;
+			cout << "Size " << size << ":" << endl;
+			cout << "Total number of pixels:               " << rast_font.variants[i_size].pixels.size() << endl; // TODO: multiple variants
+			cout << "Max ascender:                         " << max_ascender << endl;
+			cout << "Max descender:                        " << max_descender << endl;
 
-		cout << endl;
-		cout << "Total number of glyphs:               " << glyph_count << endl;
-		cout << "Number of glyph ranges:               " << rast_font.index.size() << endl;
-		cout << "Total number of codepoints not found: " << missing_count << endl;
-		cout << "Total number of pixels:               " <<	rast_font.variants.back().pixels.size() << endl; // TODO: multiple variants
-    }
+			// Next size
+			i_size++;
+
+		} // each pixel size
+
+	}
     catch(exception &e) {
         cerr << "Error: " << e.what() << endl;
     }
