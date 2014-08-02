@@ -11,7 +11,8 @@
 #include FT_GLYPH_H
 #include FT_ERRORS_H
 
-#include <cereal/cereal.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/vector.hpp>
 
 #include <gpc/fonts/RasterizedGlyphCBox.hpp>
 #include <gpc/fonts/GlyphRange.hpp>
@@ -60,6 +61,40 @@ static auto findFontFile(const std::string &file) -> std::string {
     }
     
     throw runtime_error(string("Font file \"") + file + "\" doesn't exist");
+}
+
+namespace cereal {
+
+	template <class Archive>
+	void serialize(Archive & archive, gpc::fonts::GlyphRange &range)
+	{
+		archive(range.starting_codepoint, range.count);
+	}
+
+	template <class Archive>
+	void serialize(Archive & archive, gpc::fonts::RasterizedFont::GlyphRecord &glrec)
+	{
+		archive(glrec.cbox, glrec.pixel_base);
+	}
+
+	template <class Archive>
+	void serialize(Archive & archive, gpc::fonts::RasterizedFont::Variant &var)
+	{
+		archive(var.glyphs, var.pixels);
+	}
+
+	template <class Archive>
+	void serialize(Archive & archive, gpc::fonts::RasterizedGlyphCBox &cbox)
+	{
+		archive(cbox.width, cbox.rows, cbox.left, cbox.top, cbox.adv_x, cbox.adv_y);
+	}
+
+	template <class Archive>
+	void serialize(Archive & archive, gpc::fonts::RasterizedFont &rfont)
+	{
+		archive(rfont.index, rfont.variants);
+	}
+
 }
 
 int main(int argc, const char *argv[])
@@ -167,9 +202,9 @@ int main(int argc, const char *argv[])
 		}
 
 		cout << endl;
-		cout << "Total number of glyphs:               " << glyph_count << endl;
-		cout << "Number of glyph ranges:               " << rast_font.index.size() << endl;
-		cout << "Total number of codepoints not found: " << missing_count << endl;
+		cout << "Total number of glyphs: " << glyph_count << endl;
+		cout << "Number of glyph ranges: " << rast_font.index.size() << endl;
+		cout << "Missing codepoints:     " << missing_count << endl;
 
 		// Repeat for each pixel size
 		
@@ -245,15 +280,19 @@ int main(int argc, const char *argv[])
 
 			cout << endl;
 			cout << "Size " << size << ":" << endl;
-			cout << "Total number of pixels:               " << rast_font.variants[i_size].pixels.size() << endl; // TODO: multiple variants
-			cout << "Max ascender:                         " << max_ascender << endl;
-			cout << "Max descender:                        " << max_descender << endl;
+			cout << "Total number of pixels: " << rast_font.variants[i_size].pixels.size() << endl; // TODO: multiple variants
+			cout << "Max ascender:           " << max_ascender << endl;
+			cout << "Max descender:          " << max_descender << endl;
 
 			// Next size
 			i_size++;
 
 		} // each pixel size
 
+		// Serialize the result to the output file
+		ofstream os(output_file, ios_base::binary);
+		cereal::BinaryOutputArchive archive(os);
+		archive(rast_font);
 	}
     catch(exception &e) {
         cerr << "Error: " << e.what() << endl;
