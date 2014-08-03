@@ -30,11 +30,8 @@ endif(0)
  
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-#-----------------------------------------------
-# Special settings
-#
-
-set(RASTERIZED_FONT_FILENAME "arial-14.15")
+set(RASTERIZED_FONT_FILE_NAME "arial-14.15.bin")
+set(EMBEDDED_DATA_INCLUDE_FILE_NAME "embedded.hpp")
 
 #------------------------------------------------
 # Targets
@@ -42,27 +39,32 @@ set(RASTERIZED_FONT_FILENAME "arial-14.15")
 
 set(TEMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/tmp")
 
-set(RASTERIZED_FONT_BINARY_FULLPATH "${TEMP_DIR}/${RASTERIZED_FONT_FILENAME}.bin")
+set(RASTERIZED_FONT_FILE_PATH "${TEMP_DIR}/${RASTERIZED_FONT_FILE_NAME}")
 
-add_custom_command( OUTPUT "${RASTERIZED_FONT_BINARY_FULLPATH}"
-	COMMAND GPCFontRasterizer ARGS input=Arial.ttf size=14 size=15 output=${RASTERIZED_FONT_BINARY_FULLPATH}
+add_custom_command( OUTPUT "${RASTERIZED_FONT_FILE_PATH}"
+	COMMAND GPCFontRasterizer ARGS input=Arial.ttf size=14 size=15 output=${RASTERIZED_FONT_FILE_PATH}
 )
 
-set(RASTERIZED_FONT_INCLUDEFILE_FULLPATH "${CMAKE_CURRENT_BINARY_DIR}/generated/${RASTERIZED_FONT_FILENAME}.hpp")
+set(EMBEDDED_DATA_INCLUDE_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/generated/${EMBEDDED_DATA_INCLUDE_FILE_NAME}")
 
-add_custom_command( OUTPUT "${RASTERIZED_FONT_INCLUDEFILE_FULLPATH}"
-	MAIN_DEPENDENCY "${RASTERIZED_FONT_BINARY_FULLPATH}"
+add_custom_command( OUTPUT "${EMBEDDED_DATA_INCLUDE_FILE_PATH}"
+	MAIN_DEPENDENCY "${RASTERIZED_FONT_FILE_PATH}"
 	WORKING_DIRECTORY ${TEMP_DIR}
-	COMMAND CppFileEmbedder ARGS ${RASTERIZED_FONT_INCLUDEFILE_FULLPATH} ${RASTERIZED_FONT_FILENAME}.bin
+	COMMAND CppFileEmbedder ARGS ${EMBEDDED_DATA_INCLUDE_FILE_PATH} ${RASTERIZED_FONT_FILE_NAME}
 )
 
-add_executable(${PROJECT_NAME} WIN32 main.cpp "${RASTERIZED_FONT_INCLUDEFILE_FULLPATH}")
+add_executable(${PROJECT_NAME} WIN32 main.cpp "${EMBEDDED_DATA_INCLUDE_FILE_PATH}")
 
 #add_dependencies(${PROJECT_NAME} ${RASTERIZED_FONT_INCLUDEFILE_FULLPATH})
 
 #------------------------------------------------
 # Libraries we need
 #
+
+# GPC Fonts
+
+find_package(gpc_fonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
+target_include_directories(${PROJECT_NAME} PRIVATE ${gpc_fonts_INCLUDE_DIRS})
 
 # SDL2
 

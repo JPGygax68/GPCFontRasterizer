@@ -3,13 +3,17 @@
 #include <string.h>
 #include <math.h>
 #include <stdexcept>
+#include <sstream>
 
 #include <SDL.h>
 #include <SDL_main.h>
 #include <SDL_opengl.h>
 #include <GL/GLU.h>
 
-#include "arial-14.15.hpp"
+#include <cereal/archives/binary.hpp>
+#include <gpc/fonts/cereal.hpp>
+
+#include "embedded.hpp"
 
 void initGL()
 {
@@ -97,6 +101,14 @@ void render(SDL_Window *window)
 int
 main(int argc, char *argv[])
 {
+	gpc::fonts::RasterizedFont rfont;
+	{
+		auto &file = embeds["arial-14.15.bin"];
+		std::stringstream is(std::string(file.data<char>(), file.size()));
+		cereal::BinaryInputArchive archive(is);
+		archive(rfont);
+	}
+
 	SDL_Init(SDL_INIT_VIDEO);
 
 	SDL_Window *window = SDL_CreateWindow("GPC Font Rasterizer Test App",

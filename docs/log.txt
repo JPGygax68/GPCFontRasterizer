@@ -1,3 +1,18 @@
+2014-08-03
+==========
+
+Good progress on this Sunday afternoon: I fixed, and later improved CppFileEmbedder; I got de-serialization (via Cereal) of RasterizedFont to work.
+
+Regarding Cereal, there's a possible future improvement that I'd like to write down here before I forget about it.
+
+Deserializing works perfectly, but there's unnecessary copying going on that I think could be avoided. The copying occurs on the std::vector's, which the de-serializing code transfers from the embedded object to heap-allocated space.
+
+Given the way Cereal's BinaryArchive works - endianness matches the machine -, and the straightforward way in which I implemented the serializing of my own structures - members are serialized in their declared order -, I think it should be possible to replace the vectors with some kind of "read-only vectors" when deserializing, which instead of allocating memory on the heap would simply store a pointer to the original data.
+
+This is a bit of a challenge to be sure. For example, I'm currently wrapping the data of the embedded rasterized font file into a stringstream, because cereal::BinaryArchive reads its data from a stream; I'm not sure if it is possible to get access to the string underlying a stringstream. And even if that's possible, I'm not yet convinced if creating a string from a const char * involves the string getting copied or not. In other words, I may have to implement my own Cereal archive type, e.g. gpc::cereal::ConstMemoryArchive or something like that.
+
+Even if there's a way to avoid that, implementing an STL-compatible, read-only container to replace std::vector would be challenge enough to begin with. [And, note to myself: to respect DRY, I will have to templatize my RasterizedFont data structure to have it use my hypothetical vector replacement.]
+
 2014-07-31
 ==========
 

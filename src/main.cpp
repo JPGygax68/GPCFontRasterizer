@@ -12,11 +12,11 @@
 #include FT_ERRORS_H
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
 
 #include <gpc/fonts/RasterizedGlyphCBox.hpp>
 #include <gpc/fonts/GlyphRange.hpp>
 #include <gpc/fonts/RasterizedFont.hpp>
+#include <gpc/fonts/cereal.hpp>
 
 typedef std::pair<std::string, std::string> NameValuePair;
 
@@ -61,40 +61,6 @@ static auto findFontFile(const std::string &file) -> std::string {
     }
     
     throw runtime_error(string("Font file \"") + file + "\" doesn't exist");
-}
-
-namespace cereal {
-
-	template <class Archive>
-	void serialize(Archive & archive, gpc::fonts::GlyphRange &range)
-	{
-		archive(range.starting_codepoint, range.count);
-	}
-
-	template <class Archive>
-	void serialize(Archive & archive, gpc::fonts::RasterizedFont::GlyphRecord &glrec)
-	{
-		archive(glrec.cbox, glrec.pixel_base);
-	}
-
-	template <class Archive>
-	void serialize(Archive & archive, gpc::fonts::RasterizedFont::Variant &var)
-	{
-		archive(var.glyphs, var.pixels);
-	}
-
-	template <class Archive>
-	void serialize(Archive & archive, gpc::fonts::RasterizedGlyphCBox &cbox)
-	{
-		archive(cbox.width, cbox.rows, cbox.left, cbox.top, cbox.adv_x, cbox.adv_y);
-	}
-
-	template <class Archive>
-	void serialize(Archive & archive, gpc::fonts::RasterizedFont &rfont)
-	{
-		archive(rfont.index, rfont.variants);
-	}
-
 }
 
 int main(int argc, const char *argv[])
