@@ -47,6 +47,12 @@ endforeach()
 include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/cereal/include )
 
 #------------------------------------------------
+# Tools
+#
+
+add_subdirectory(3rdparty/CppFileEmbedder/src) # TODO: provide a top-level CMakeLists.txt
+
+#------------------------------------------------
 # Target: executable
 #
 

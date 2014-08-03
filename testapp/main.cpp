@@ -9,6 +9,8 @@
 #include <SDL_opengl.h>
 #include <GL/GLU.h>
 
+#include "arial-14.15.hpp"
+
 void initGL()
 {
 	/* Enable smooth shading */

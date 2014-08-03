@@ -1,3 +1,6 @@
 [submodule "3rdparty/cereal"]
 	path = 3rdparty/cereal
 	url = git@github.com:USCiLab/cereal.git
+[submodule "3rdparty/CppFileEmbedder"]
+	path = 3rdparty/CppFileEmbedder
+	url = git@github.com:JPGygax68/CppFileEmbedder.git

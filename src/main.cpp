@@ -293,14 +293,16 @@ int main(int argc, const char *argv[])
 		ofstream os(output_file, ios_base::binary);
 		cereal::BinaryOutputArchive archive(os);
 		archive(rast_font);
+
+		exit_code = 0;
 	}
     catch(exception &e) {
         cerr << "Error: " << e.what() << endl;
     }
 
-	cout << endl;
+	/* cout << endl;
     cout << "Press RETURN to terminate" << endl;
-    cin.ignore();
+    cin.ignore(); */
 
     return exit_code;
 }

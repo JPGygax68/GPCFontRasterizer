@@ -28,19 +28,37 @@ FOREACH(flag
 ENDFOREACH()
 endif(0)
  
-#------------------------------------------------
-# Sources
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
+
+#-----------------------------------------------
+# Special settings
 #
 
-set(SOURCE_FILES main.cpp)
-set(HEADER_FILES )
-set(SHADER_FILES )
+set(RASTERIZED_FONT_FILENAME "arial-14.15")
 
 #------------------------------------------------
 # Targets
 #
 
-add_executable(${PROJECT_NAME} WIN32 ${SOURCE_FILES})
+set(TEMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/tmp")
+
+set(RASTERIZED_FONT_BINARY_FULLPATH "${TEMP_DIR}/${RASTERIZED_FONT_FILENAME}.bin")
+
+add_custom_command( OUTPUT "${RASTERIZED_FONT_BINARY_FULLPATH}"
+	COMMAND GPCFontRasterizer ARGS input=Arial.ttf size=14 size=15 output=${RASTERIZED_FONT_BINARY_FULLPATH}
+)
+
+set(RASTERIZED_FONT_INCLUDEFILE_FULLPATH "${CMAKE_CURRENT_BINARY_DIR}/generated/${RASTERIZED_FONT_FILENAME}.hpp")
+
+add_custom_command( OUTPUT "${RASTERIZED_FONT_INCLUDEFILE_FULLPATH}"
+	MAIN_DEPENDENCY "${RASTERIZED_FONT_BINARY_FULLPATH}"
+	WORKING_DIRECTORY ${TEMP_DIR}
+	COMMAND CppFileEmbedder ARGS ${RASTERIZED_FONT_INCLUDEFILE_FULLPATH} ${RASTERIZED_FONT_FILENAME}.bin
+)
+
+add_executable(${PROJECT_NAME} WIN32 main.cpp "${RASTERIZED_FONT_INCLUDEFILE_FULLPATH}")
+
+#add_dependencies(${PROJECT_NAME} ${RASTERIZED_FONT_INCLUDEFILE_FULLPATH})
 
 #------------------------------------------------
 # Libraries we need
