@@ -40,7 +40,7 @@ set(SHADER_FILES )
 # Targets
 #
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} WIN32 ${SOURCE_FILES})
 
 #------------------------------------------------
 # Libraries we need
