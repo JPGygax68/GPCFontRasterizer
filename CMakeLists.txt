@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
 #------------------------------------------------
+# Configure CMake itself
+#
+
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_MODULE_PATH})
+
+#------------------------------------------------
 # Project + basics
 #
 
@@ -45,6 +51,12 @@ include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/cereal/include )
 #
 
 add_subdirectory(src)
+
+#------------------------------------------------
+# Target: test app
+#
+
+add_subdirectory(testapp)
 
 #------------------------------------------------
 # Tests
