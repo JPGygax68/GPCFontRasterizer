@@ -13,6 +13,12 @@ This is a bit of a challenge to be sure. For example, I'm currently wrapping the
 
 Even if there's a way to avoid that, implementing an STL-compatible, read-only container to replace std::vector would be challenge enough to begin with. [And, note to myself: to respect DRY, I will have to templatize my RasterizedFont data structure to have it use my hypothetical vector replacement.]
 
+[2014-08-04] Another thought regarding optimized readback of binary archives: there should be some way of enforcing that vector elements (for example) take up a uniform number of bytes in serialized form.
+
+- Use replacements for std::vector e.a. when creating the archive, which enforce that rule ?
+
+- Or use a custom binary archiver that creates a stream that can be read back as one block ?
+
 2014-07-31
 ==========
 

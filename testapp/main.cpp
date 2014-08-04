@@ -13,27 +13,29 @@
 #include <cereal/archives/binary.hpp>
 #include <gpc/fonts/cereal.hpp>
 
+#include <OpenGL/error.hpp>
+
 #include "embedded.hpp"
 
 void initGL()
 {
 	/* Enable smooth shading */
-	glShadeModel(GL_SMOOTH);
+	GL(glShadeModel, (GL_SMOOTH));
 
 	/* Set the background black */
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	GL(glClearColor, (0.0f, 0.0f, 0.0f, 0.0f));
 
 	/* Depth buffer setup */
-	glClearDepth(1.0f);
+	GL(glClearDepth, (1.0f));
 
 	/* Enables Depth Testing */
-	glEnable(GL_DEPTH_TEST);
+	GL(glEnable, (GL_DEPTH_TEST));
 
 	/* The Type Of Depth Test To Do */
-	glDepthFunc(GL_LEQUAL);
+	GL(glDepthFunc, (GL_LEQUAL));
 
 	/* Really Nice Perspective Calculations */
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	GL(glHint, (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST));
 }
 
 /* function to reset our viewport after a window resize
@@ -49,20 +51,20 @@ int setViewport(int width, int height)
 	ratio = (GLfloat)width / (GLfloat)height;
 
 	/* Setup our viewport. */
-	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+	GL(glViewport, (0, 0, (GLsizei)width, (GLsizei)height));
 
 	/* change to the projection matrix and set our viewing volume. */
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+	GL(glMatrixMode, (GL_PROJECTION));
+	GL(glLoadIdentity, ());
 
 	/* Set our perspective */
-	gluPerspective(45.0f, ratio, 0.1f, 100.0f);
+	GL(gluPerspective, (45.0f, ratio, 0.1f, 100.0f));
 
 	/* Make sure we're chaning the model view and not the projection */
-	glMatrixMode(GL_MODELVIEW);
+	GL(glMatrixMode, (GL_MODELVIEW));
 
 	/* Reset The View */
-	glLoadIdentity();
+	GL(glLoadIdentity, ());
 
 	return 1;
 }
@@ -70,29 +72,29 @@ int setViewport(int width, int height)
 void render(SDL_Window *window)
 {
 	/* Set the background black */
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	GL(glClearColor, (0.0f, 0.0f, 0.0f, 0.0f));
 	/* Clear The Screen And The Depth Buffer */
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	GL(glClear, (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 	/* Move Left 1.5 Units And Into The Screen 6.0 */
-	glLoadIdentity();
-	glTranslatef(-1.5f, 0.0f, -6.0f);
+	GL(glLoadIdentity, ());
+	GL(glTranslatef, (-1.5f, 0.0f, -6.0f));
 
-	glBegin(GL_TRIANGLES);				/* Drawing Using Triangles */
-	glVertex3f(0.0f, 1.0f, 0.0f);		/* Top */
-	glVertex3f(-1.0f, -1.0f, 0.0f);		/* Bottom Left */
-	glVertex3f(1.0f, -1.0f, 0.0f);		/* Bottom Right */
-	glEnd();							/* Finished Drawing The Triangle */
+	GL(glBegin, (GL_TRIANGLES));			/* Drawing Using Triangles */
+	GL(glVertex3f, (0.0f, 1.0f, 0.0f));		/* Top */
+	GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
+	GL(glVertex3f, (1.0f, -1.0f, 0.0f));	/* Bottom Right */
+	GLI(glEnd, ());							/* Finished Drawing The Triangle */
 
 	/* Move Right 3 Units */
-	glTranslatef(3.0f, 0.0f, 0.0f);
+	GL(glTranslatef, (3.0f, 0.0f, 0.0f));
 
-	glBegin(GL_QUADS);					/* Draw A Quad */
-	glVertex3f(-1.0f, 1.0f, 0.0f);		/* Top Left */
-	glVertex3f(1.0f, 1.0f, 0.0f);		/* Top Right */
-	glVertex3f(1.0f, -1.0f, 0.0f);		/* Bottom Right */
-	glVertex3f(-1.0f, -1.0f, 0.0f);		/* Bottom Left */
-	glEnd();							/* Done Drawing The Quad */
+	GL(glBegin, (GL_QUADS));				/* Draw A Quad */
+	GL(glVertex3f, (-1.0f,  1.0f, 0.0f));	/* Top Left */
+	GL(glVertex3f, ( 1.0f,  1.0f, 0.0f));	/* Top Right */
+	GL(glVertex3f, ( 1.0f, -1.0f, 0.0f));	/* Bottom Right */
+	GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
+	GLI( glEnd, ());							/* Done Drawing The Quad */
 
 	SDL_GL_SwapWindow(window);
 }
