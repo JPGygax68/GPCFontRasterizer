@@ -5,17 +5,25 @@
 #include <stdexcept>
 #include <sstream>
 
+#include <GL/glew.h>
+#include <GL/GLU.h>
+
 #include <SDL.h>
 #include <SDL_main.h>
 #include <SDL_opengl.h>
-#include <GL/GLU.h>
 
 #include <cereal/archives/binary.hpp>
 #include <gpc/fonts/cereal.hpp>
 
 #include <OpenGL/error.hpp>
 
-#include "embedded.hpp"
+#include "TextRenderer.hpp"
+
+static const unsigned char embedded_font[] = {
+#include "embedded_font.h"
+};
+
+static TextRenderer text_renderer;
 
 void initGL()
 {
@@ -36,6 +44,11 @@ void initGL()
 
 	/* Really Nice Perspective Calculations */
 	GL(glHint, (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST));
+
+	glewInit();
+
+	// Initialize the Text Renderer
+	text_renderer.init();
 }
 
 /* function to reset our viewport after a window resize
@@ -105,11 +118,11 @@ main(int argc, char *argv[])
 {
 	gpc::fonts::RasterizedFont rfont;
 	{
-		auto &file = embeds["arial-14.15.bin"];
-		std::stringstream is(std::string(file.data<char>(), file.size()));
+		std::stringstream is(std::string(reinterpret_cast<const char *>(embedded_font), sizeof(embedded_font)), std::ios_base::in);
 		cereal::BinaryInputArchive archive(is);
 		archive(rfont);
 	}
+	text_renderer.setFont(rfont);
 
 	SDL_Init(SDL_INIT_VIDEO);
 

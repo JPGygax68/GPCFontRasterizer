@@ -30,34 +30,57 @@ endif(0)
  
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-set(RASTERIZED_FONT_FILE_NAME "arial-14.15.bin")
-set(EMBEDDED_DATA_INCLUDE_FILE_NAME "embedded.hpp")
+set(TEMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/tmp")
 
 #------------------------------------------------
 # Targets
 #
 
-set(TEMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/tmp")
+# Embedded rasterized font
 
+# 1) Generate a rasterized font file
+
+set(RASTERIZED_FONT_FILE_NAME "arial-14.15.bin")
 set(RASTERIZED_FONT_FILE_PATH "${TEMP_DIR}/${RASTERIZED_FONT_FILE_NAME}")
 
 add_custom_command( OUTPUT "${RASTERIZED_FONT_FILE_PATH}"
 	COMMAND GPCFontRasterizer ARGS input=Arial.ttf size=14 size=15 output=${RASTERIZED_FONT_FILE_PATH}
 )
 
-set(EMBEDDED_DATA_INCLUDE_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/generated/${EMBEDDED_DATA_INCLUDE_FILE_NAME}")
+# 2) Embed it
 
-add_custom_command( OUTPUT "${EMBEDDED_DATA_INCLUDE_FILE_PATH}"
-	MAIN_DEPENDENCY "${RASTERIZED_FONT_FILE_PATH}"
-	WORKING_DIRECTORY ${TEMP_DIR}
-	COMMAND CppFileEmbedder ARGS ${EMBEDDED_DATA_INCLUDE_FILE_PATH} ${RASTERIZED_FONT_FILE_NAME}
+set(RASTERIZED_FONT_INCLUDE_FILE_NAME "embedded_font.h")
+set(RASTERIZED_FONT_INCLUDE_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/generated/${RASTERIZED_FONT_INCLUDE_FILE_NAME}")
+
+add_custom_command( OUTPUT "${RASTERIZED_FONT_INCLUDE_FILE_PATH}"
+	DEPENDS ${RASTERIZED_FONT_FILE_PATH}
+	COMMAND GPCBin2C ARGS -i "${RASTERIZED_FONT_FILE_PATH}" -o "${RASTERIZED_FONT_INCLUDE_FILE_PATH}"
 )
 
-add_executable(${PROJECT_NAME} WIN32 main.cpp OpenGL/error.hpp "${EMBEDDED_DATA_INCLUDE_FILE_PATH}")
+# Embedded shaders
+
+set(VERTEX_SHADER_SOURCE_FILE TextRenderer.vertex.glsl)
+set(VERTEX_SHADER_INCLUDE_FILE_NAME "TextRenderer_vertex_shader.h")
+
+set(FRAGMENT_SHADER_SOURCE_FILE TextRenderer.fragment.glsl)
+set(FRAGMENT_SHADER_INCLUDE_FILE_NAME "TextRenderer_fragment_shader.h")
+
+set(SHADER_INCLUDE_FILES "")
+
+foreach(f VERTEX FRAGMENT) 
+  set(${f}_SHADER_INCLUDE_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/generated/${${f}_SHADER_INCLUDE_FILE_NAME}")
+  add_custom_command( OUTPUT "${${f}_SHADER_INCLUDE_FILE_PATH}"
+    DEPENDS ${${f}_SHADER_SOURCE_FILE}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND GPCBin2C ARGS -i "${${f}_SHADER_SOURCE_FILE}" -o "${${f}_SHADER_INCLUDE_FILE_PATH}"
+  )
+  set(SHADER_INCLUDE_FILES ${SHADER_INCLUDE_FILES} "${${f}_SHADER_INCLUDE_FILE_PATH}")
+endforeach()
+
+add_executable(${PROJECT_NAME} WIN32 main.cpp TextRenderer.cpp TextRenderer.hpp OpenGL/error.hpp 
+  ${RASTERIZED_FONT_INCLUDE_FILE_PATH} ${SHADER_INCLUDE_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-#add_dependencies(${PROJECT_NAME} ${RASTERIZED_FONT_INCLUDEFILE_FULLPATH})
 
 #------------------------------------------------
 # Libraries we need
@@ -73,6 +96,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${gpc_fonts_INCLUDE_DIRS})
 find_package(SDL2 REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
+
+# GLEW
+
+find_package(GLEW REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE ${GLEW_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARY})
 
 # OpenGL 
 

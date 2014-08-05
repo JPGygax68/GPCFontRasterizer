@@ -4,3 +4,6 @@
 [submodule "3rdparty/CppFileEmbedder"]
 	path = 3rdparty/CppFileEmbedder
 	url = git@github.com:JPGygax68/CppFileEmbedder.git
+[submodule "3rdparty/GPCBin2C"]
+	path = 3rdparty/GPCBin2C
+	url = git@github.com:JPGygax68/GPCBin2C.git
