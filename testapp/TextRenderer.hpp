@@ -9,47 +9,27 @@
 class TextRenderer {
 public:
 
+	void setViewportSize(GLint width, GLint height) { vp_width = width, vp_height = height; }
+
 	void setFont(const gpc::fonts::RasterizedFont &rfont_) { rfont = &rfont_; }
 
-	void init() {
+	void init();
 
-		uploadFont();
+	void drawText(const uint32_t *text, GLint x, GLint y, size_t variant = 0);
 
-		prepareShaderProgram();
-	}
-
-	void drawText(const uint32_t *text, size_t variant = 0) {
-
-	}
-
-	void cleanup() {
-		// TODO: delete the buffers
-	}
+	void cleanup();
 
 private:
 
-	void uploadFont() {
-
-		assert(rfont);
-
-		buffers.resize(rfont->variants.size());
-		GL(glGenBuffers, (buffers.size(), &buffers[0]));
-
-		for (auto i_var = 0U; i_var < rfont->variants.size(); i_var++) {
-
-			GL(glBindBuffer, (GL_TEXTURE_BUFFER, buffers[i_var]));
-
-			auto &variant = rfont->variants[i_var];
-
-			// Load the pixels into a buffer object
-			GL(glBufferStorage, (GL_TEXTURE_BUFFER, variant.pixels.size(), &variant.pixels[0], 0)); // TODO: really no flags ?
-		}
-	}
-
+	void uploadFont();
 	void prepareShaderProgram();
+	void prepareGlyphVertices();
 
+	GLint vp_width, vp_height;
 	const gpc::fonts::RasterizedFont *rfont;
-	std::vector<GLuint> buffers;
+	std::vector<GLuint> texture_buffers;
+	std::vector<GLuint> buffer_textures;
+	GLuint vertex_buffer;
 	GLuint shader_program;
 	GLuint vertex_shader, fragment_shader;
 

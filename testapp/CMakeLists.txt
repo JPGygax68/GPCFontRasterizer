@@ -59,11 +59,13 @@ add_custom_command( OUTPUT "${RASTERIZED_FONT_INCLUDE_FILE_PATH}"
 
 # Embedded shaders
 
-set(VERTEX_SHADER_SOURCE_FILE TextRenderer.vertex.glsl)
+set(VERTEX_SHADER_SOURCE_FILE "TextRenderer.vertex.glsl")
 set(VERTEX_SHADER_INCLUDE_FILE_NAME "TextRenderer_vertex_shader.h")
 
-set(FRAGMENT_SHADER_SOURCE_FILE TextRenderer.fragment.glsl)
+set(FRAGMENT_SHADER_SOURCE_FILE "TextRenderer.fragment.glsl")
 set(FRAGMENT_SHADER_INCLUDE_FILE_NAME "TextRenderer_fragment_shader.h")
+
+set(SHADER_SOURCE_FILES ${VERTEX_SHADER_SOURCE_FILE} ${FRAGMENT_SHADER_SOURCE_FILE})
 
 set(SHADER_INCLUDE_FILES "")
 
@@ -78,7 +80,7 @@ foreach(f VERTEX FRAGMENT)
 endforeach()
 
 add_executable(${PROJECT_NAME} WIN32 main.cpp TextRenderer.cpp TextRenderer.hpp OpenGL/error.hpp 
-  ${RASTERIZED_FONT_INCLUDE_FILE_PATH} ${SHADER_INCLUDE_FILES})
+  ${RASTERIZED_FONT_INCLUDE_FILE_PATH} ${SHADER_SOURCE_FILES} ${SHADER_INCLUDE_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -71,7 +71,8 @@ int setViewport(int width, int height)
 	GL(glLoadIdentity, ());
 
 	/* Set our perspective */
-	GL(gluPerspective, (45.0f, ratio, 0.1f, 100.0f));
+	//GL(gluPerspective, (45.0f, ratio, 0.1f, 100.0f));
+	GL(glOrtho, (0, (GLdouble)width, 0, (GLdouble)height, -1, 1));
 
 	/* Make sure we're chaning the model view and not the projection */
 	GL(glMatrixMode, (GL_MODELVIEW));
@@ -79,35 +80,53 @@ int setViewport(int width, int height)
 	/* Reset The View */
 	GL(glLoadIdentity, ());
 
+	text_renderer.setViewportSize(width, height);
+
 	return 1;
 }
 
 void render(SDL_Window *window)
 {
-	/* Set the background black */
 	GL(glClearColor, (0.0f, 0.0f, 0.0f, 0.0f));
 	/* Clear The Screen And The Depth Buffer */
 	GL(glClear, (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-	/* Move Left 1.5 Units And Into The Screen 6.0 */
-	GL(glLoadIdentity, ());
-	GL(glTranslatef, (-1.5f, 0.0f, -6.0f));
+	if (false) {
+		/* Set the background black */
 
-	GL(glBegin, (GL_TRIANGLES));			/* Drawing Using Triangles */
-	GL(glVertex3f, (0.0f, 1.0f, 0.0f));		/* Top */
-	GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
-	GL(glVertex3f, (1.0f, -1.0f, 0.0f));	/* Bottom Right */
-	GLI(glEnd, ());							/* Finished Drawing The Triangle */
+		/* Move Left 1.5 Units And Into The Screen 6.0 */
+		GL(glLoadIdentity, ());
+		GL(glTranslatef, (-1.5f, 0.0f, -6.0f));
 
-	/* Move Right 3 Units */
-	GL(glTranslatef, (3.0f, 0.0f, 0.0f));
+		GL(glBegin, (GL_TRIANGLES));			/* Drawing Using Triangles */
+		GL(glVertex3f, (0.0f, 1.0f, 0.0f));		/* Top */
+		GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
+		GL(glVertex3f, (1.0f, -1.0f, 0.0f));	/* Bottom Right */
+		GLI(glEnd, ());							/* Finished Drawing The Triangle */
 
+		/* Move Right 3 Units */
+		GL(glTranslatef, (3.0f, 0.0f, 0.0f));
+
+		GL(glBegin, (GL_QUADS));				/* Draw A Quad */
+		GL(glVertex3f, (-1.0f, 1.0f, 0.0f));	/* Top Left */
+		GL(glVertex3f, (1.0f, 1.0f, 0.0f));	/* Top Right */
+		GL(glVertex3f, (1.0f, -1.0f, 0.0f));	/* Bottom Right */
+		GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
+		GLI(glEnd, ());							/* Done Drawing The Quad */
+	}
+
+#ifdef NOT_DEFINED
 	GL(glBegin, (GL_QUADS));				/* Draw A Quad */
-	GL(glVertex3f, (-1.0f,  1.0f, 0.0f));	/* Top Left */
-	GL(glVertex3f, ( 1.0f,  1.0f, 0.0f));	/* Top Right */
-	GL(glVertex3f, ( 1.0f, -1.0f, 0.0f));	/* Bottom Right */
-	GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
-	GLI( glEnd, ());							/* Done Drawing The Quad */
+	GL(glVertex3f, (10, 400, 0));
+	GL(glVertex3f, (700, 400, 0));
+	GL(glVertex3f, (700, 10, 0));
+	GL(glVertex3f, (10, 10, 0));
+	GLI(glEnd, ());							/* Done Drawing The Quad */
+#endif
+
+	/* Draw text */
+	const uint32_t text[] = { 'A', 'B', 'C', 'D', 'g', 'i', ',', 0 };
+	text_renderer.drawText(text, 100, 200);
 
 	SDL_GL_SwapWindow(window);
 }
@@ -116,65 +135,71 @@ void render(SDL_Window *window)
 int
 main(int argc, char *argv[])
 {
-	gpc::fonts::RasterizedFont rfont;
-	{
-		std::stringstream is(std::string(reinterpret_cast<const char *>(embedded_font), sizeof(embedded_font)), std::ios_base::in);
-		cereal::BinaryInputArchive archive(is);
-		archive(rfont);
-	}
-	text_renderer.setFont(rfont);
+	try {
 
-	SDL_Init(SDL_INIT_VIDEO);
+		gpc::fonts::RasterizedFont rfont;
+		{
+			std::stringstream is(std::string(reinterpret_cast<const char *>(embedded_font), sizeof(embedded_font)), std::ios_base::in);
+			cereal::BinaryInputArchive archive(is);
+			archive(rfont);
+		}
+		text_renderer.setFont(rfont);
 
-	SDL_Window *window = SDL_CreateWindow("GPC Font Rasterizer Test App",
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		800, 600, SDL_WINDOW_OPENGL);
-	if (!window) throw std::runtime_error("Failed to open window");
+		SDL_Init(SDL_INIT_VIDEO);
 
-	SDL_GLContext glctx = SDL_GL_CreateContext(window);
-	if (!glctx) throw std::runtime_error("Failed to create an OpenGL context for the window");
+		SDL_Window *window = SDL_CreateWindow("GPC Font Rasterizer Test App",
+			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+			800, 600, SDL_WINDOW_OPENGL);
+		if (!window) throw std::runtime_error("Failed to open window");
 
-	SDL_GL_MakeCurrent(window, glctx);
+		SDL_GLContext glctx = SDL_GL_CreateContext(window);
+		if (!glctx) throw std::runtime_error("Failed to create an OpenGL context for the window");
 
-	initGL();
+		SDL_GL_MakeCurrent(window, glctx);
 
-	setViewport(800, 600);
+		initGL();
 
-	render(window);
+		setViewport(800, 600);
 
-	SDL_Event event;
+		render(window);
 
-	while (SDL_WaitEvent(&event)) {
-		
-		bool exit = false, must_render = false;
+		SDL_Event event;
 
-		switch (event.type){
+		while (SDL_WaitEvent(&event)) {
 
-		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == 27)
+			bool exit = false, must_render = false;
+
+			switch (event.type){
+
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == 27)
+					exit = true;
+				break;
+
+			case SDL_KEYUP:
+				break;
+
+			case SDL_QUIT:
 				exit = true;
-			break;
+				break;
 
-		case SDL_KEYUP:
-			break;
+			default:
+				break;
+			}
 
-		case SDL_QUIT:
-			exit = true;
-			break;
+			if (exit) break;
 
-		default:
-			break;
+			if (must_render) {
+				render(window);
+				must_render = false;
+			}
 		}
 
-		if (exit) break;
-
-		if (must_render) {
-			render(window);
-			must_render = false;
-		}
+		SDL_Quit();
 	}
-
-	SDL_Quit();
+	catch (const std::exception &e) {
+		std::cerr << e.what() << std::endl;
+	}
 
 	return 0;
 }

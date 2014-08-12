@@ -215,9 +215,9 @@ int main(int argc, const char *argv[])
 
 					variant.glyphs.emplace_back<RasterizedFont::GlyphRecord>({
 						{
-							bitmap.width, bitmap.rows,
-							slot->bitmap_left, slot->bitmap_top,
-							slot->advance.x >> 6, slot->advance.y >> 6
+                            slot->bitmap_left, bitmap.width + slot->bitmap_left,
+                            slot->bitmap_top - bitmap.rows, slot->bitmap_top,
+                            slot->advance.x >> 6, slot->advance.y >> 6
 						},
 						variant.pixels.size()
 					});
@@ -234,7 +234,7 @@ int main(int argc, const char *argv[])
 
 					// Copy the pixels
 					uint32_t pixel_base = pixels.size();
-					pixels.resize(pixel_base + cbox.width * cbox.rows);
+					pixels.resize(pixel_base + bitmap.width * bitmap.rows);
 					auto dit = pixels.begin() + pixel_base;
 					auto sit = bitmap.buffer;
 					for (int i = 0; i < bitmap.rows; i++, sit += bitmap.pitch)
