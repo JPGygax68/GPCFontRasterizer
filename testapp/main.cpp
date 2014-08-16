@@ -1,3 +1,27 @@
+/*
+The MIT License(MIT)
+
+Copyright(c) 2014 Jean-Pierre Gygax, Biel/Bienne, Switzerland
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -87,46 +111,14 @@ int setViewport(int width, int height)
 
 void render(SDL_Window *window)
 {
-	GL(glClearColor, (0.0f, 0.0f, 0.0f, 0.0f));
+    /* Set the background black */
+    GL(glClearColor, (0.0f, 0.0f, 0.0f, 0.0f));
 	/* Clear The Screen And The Depth Buffer */
 	GL(glClear, (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-	if (false) {
-		/* Set the background black */
-
-		/* Move Left 1.5 Units And Into The Screen 6.0 */
-		GL(glLoadIdentity, ());
-		GL(glTranslatef, (-1.5f, 0.0f, -6.0f));
-
-		GL(glBegin, (GL_TRIANGLES));			/* Drawing Using Triangles */
-		GL(glVertex3f, (0.0f, 1.0f, 0.0f));		/* Top */
-		GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
-		GL(glVertex3f, (1.0f, -1.0f, 0.0f));	/* Bottom Right */
-		GLI(glEnd, ());							/* Finished Drawing The Triangle */
-
-		/* Move Right 3 Units */
-		GL(glTranslatef, (3.0f, 0.0f, 0.0f));
-
-		GL(glBegin, (GL_QUADS));				/* Draw A Quad */
-		GL(glVertex3f, (-1.0f, 1.0f, 0.0f));	/* Top Left */
-		GL(glVertex3f, (1.0f, 1.0f, 0.0f));	/* Top Right */
-		GL(glVertex3f, (1.0f, -1.0f, 0.0f));	/* Bottom Right */
-		GL(glVertex3f, (-1.0f, -1.0f, 0.0f));	/* Bottom Left */
-		GLI(glEnd, ());							/* Done Drawing The Quad */
-	}
-
-#ifdef NOT_DEFINED
-	GL(glBegin, (GL_QUADS));				/* Draw A Quad */
-	GL(glVertex3f, (10, 400, 0));
-	GL(glVertex3f, (700, 400, 0));
-	GL(glVertex3f, (700, 10, 0));
-	GL(glVertex3f, (10, 10, 0));
-	GLI(glEnd, ());							/* Done Drawing The Quad */
-#endif
-
 	/* Draw text */
 	const uint32_t text[] = { 'A', 'B', 'C', 'D', 'g', 'i', ',', 0 };
-	text_renderer.drawText(text, 100, 200);
+	text_renderer.drawText(text, 0, 4);
 
 	SDL_GL_SwapWindow(window);
 }
