@@ -2,9 +2,11 @@
 # Target: executable
 #
 
+set(TARGET_NAME GPCFontRasterizer)
+
 file(GLOB SOURCES *.cpp)
 
-add_executable(GPCFontRasterizer ${SOURCES})
+add_executable(${TARGET_NAME} ${SOURCES})
 
 #------------------------------------------------
 # Libraries
@@ -12,9 +14,8 @@ add_executable(GPCFontRasterizer ${SOURCES})
 
 # GPC Fonts
 
-find_package(gpc_fonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
-#message("gpc_fonts include dirs: " ${gpc_fonts_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${gpc_fonts_INCLUDE_DIRS})
+find_package(libGPCFonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
+target_link_libraries(${TARGET_NAME} libGPCFonts)
 
 # Boost
 
@@ -27,6 +28,26 @@ find_package(FreeType REQUIRED)
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 
+
+#------------------------------------------------
+# Exporting the build tree
+#
+
+export(TARGETS ${TARGET_NAME} FILE "${TARGET_NAME}-targets.cmake")
+
+# Export the package for use from the build tree
+# (registers the build tree with a global CMake registry)
+export(PACKAGE ${TARGET_NAME})
+
+
+# Create a config file for build tree usage:
+set(TARGET "${TARGET_NAME}")
+set(TARGET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(TARGET_LIB_DIR     ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set(TARGET_CMAKE_DIR   ${CMAKE_CURRENT_BINARY_DIR})
+set(TARGET_EXECUTABLE  ${TARGET_NAME})
+configure_file("config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}-config.cmake" @ONLY)
+
 #------------------------------------------------
 # Installing
 #
@@ -34,18 +55,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 # Note: we use "gpc" as a vendor prefix (subdir in include directory e.a.)
 # TODO: define prefixes in parent CMake list ?
 
-install(TARGETS GPCFontRasterizer
-	EXPORT GPCFontRasterizer # create an "export set"
+install(TARGETS ${TARGET_NAME}
+	EXPORT ${TARGET_NAME} # create an "export set"
   RUNTIME DESTINATION bin
 )
 
  # Install the export set for use with the install-tree
-install(EXPORT GPCFontRasterizer DESTINATION cmake)
-
-#------------------------------------------------
-# Exporting the build tree
-#
-
-# Export the package for use from the build tree
-# (registers the build tree with a global CMake registry)
-export(PACKAGE GPCFontRasterizer)
+install(EXPORT ${TARGET_NAME} DESTINATION cmake)

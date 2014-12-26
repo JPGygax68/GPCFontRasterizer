@@ -90,8 +90,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # GPC Fonts
 
-find_package(gpc_fonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
-target_include_directories(${PROJECT_NAME} PRIVATE ${gpc_fonts_INCLUDE_DIRS})
+find_package(libGPCFonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
+target_link_libraries(${PROJECT_NAME} libGPCFonts)
 
 # SDL2
 
