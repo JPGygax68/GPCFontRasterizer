@@ -1,9 +1,6 @@
-[submodule "3rdparty/cereal"]
-	path = 3rdparty/cereal
+[submodule "external/cereal"]
+	path = external/cereal
 	url = git@github.com:USCiLab/cereal.git
-[submodule "3rdparty/CppFileEmbedder"]
-	path = 3rdparty/CppFileEmbedder
+[submodule "external/CppFileEmbedder"]
+	path = external/CppFileEmbedder
 	url = git@github.com:JPGygax68/CppFileEmbedder.git
-[submodule "3rdparty/GPCBin2C"]
-	path = 3rdparty/GPCBin2C
-	url = git@github.com:JPGygax68/GPCBin2C.git
