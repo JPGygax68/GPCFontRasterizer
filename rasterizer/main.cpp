@@ -281,8 +281,10 @@ int main(int argc, const char *argv[])
 
 		// Serialize the result to the output file
 		ofstream os(output_file, ios_base::binary);
-		cereal::BinaryOutputArchive archive(os);
-		archive(rast_font);
+        cereal::BinaryOutputArchive archive(os);
+        archive(rast_font);
+
+        cout << "Done." << endl;
 
 		exit_code = 0;
 	}
