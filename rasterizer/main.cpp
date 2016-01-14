@@ -111,7 +111,7 @@ int main(int argc, const char *argv[])
 				font_file = findFontFile(value);
             }
 			else if (name == "size") {
-				sizes.insert(stoi(value));
+				sizes.insert((int16_t)stoi(value));
 			}
 			else if (name == "output") {
 				output_file = value;
@@ -206,57 +206,46 @@ int main(int argc, const char *argv[])
 
 			for (auto const &range : rast_font.index) {
 
-				for (size_t i = 0; i < range.count; i++) {
+                for (size_t i = 0; i < range.count; i++) {
 
-					// Codepoint
-					uint32_t cp = range.starting_codepoint + i;
+                    // Codepoint
+                    uint32_t cp = range.starting_codepoint + i;
 
-					// Get glyph index (again)
-					FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
+                    // Get glyph index (again)
+                    FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
 
-					// Select font size (in pixels)
-					fterror = FT_Set_Pixel_Sizes(face, 0, size);
-					if (fterror) throw runtime_error("Failed to set character size (in pixels)");
+                    // Select font size (in pixels)
+                    fterror = FT_Set_Pixel_Sizes(face, 0, size);
+                    if (fterror) throw runtime_error("Failed to set character size (in pixels)");
 
-					fterror = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-					if (fterror) throw runtime_error("Failed to get glyph");
+                    fterror = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+                    if (fterror) throw runtime_error("Failed to get glyph");
 
-					fterror = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-					if (fterror) throw runtime_error("Failed to render loaded glyph");
+                    fterror = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+                    if (fterror) throw runtime_error("Failed to render loaded glyph");
 
-					FT_GlyphSlot slot = face->glyph;
-					FT_Bitmap &bitmap = slot->bitmap;
+                    FT_GlyphSlot slot = face->glyph;
+                    FT_Bitmap &bitmap = slot->bitmap;
 
-					assert((slot->advance.x & 0x3f) == 0);
+                    assert((slot->advance.x & 0x3f) == 0);
 
-					auto &variant = rast_font.variants[i_size];
-					auto &pixels = variant.pixels;
+                    auto &variant = rast_font.variants[i_size];
+                    auto &pixels = variant.pixels;
 
-					int ascender = slot->bitmap_top;
-					int descender = slot->bitmap.rows - slot->bitmap_top;
-					if (ascender > max_ascender) max_ascender = ascender;
-					if (descender > max_descender) max_descender = descender;
+                    int ascender  = slot->bitmap_top;
+                    int descender = slot->bitmap.rows - slot->bitmap_top;
+                    if (ascender  > max_ascender ) max_ascender  = ascender ;
+                    if (descender > max_descender) max_descender = descender;
 
-                    rasterized_font::glyph_record dummy {
-                        {
-                            {
-                                (int)slot->bitmap_left, (int)(bitmap.width + slot->bitmap_left),
-                                (int)(slot->bitmap_top - bitmap.rows), (int)slot->bitmap_top
-                            },
-                            (int)(slot->advance.x >> 6), (int)(slot->advance.y >> 6)
-                        },
-                        variant.pixels.size()
-                    };
-                    
-                    variant.glyphs.emplace_back<rasterized_font::glyph_record>({
+                    variant.glyphs.emplace_back(rasterized_font::glyph_record {
                         slot->bitmap_left, static_cast<signed>(bitmap.width) + slot->bitmap_left,
                         slot->bitmap_top - static_cast<signed>(bitmap.rows), slot->bitmap_top,
                         slot->advance.x >> 6, slot->advance.y >> 6,
-						variant.pixels.size()
-					});
+                        variant.pixels.size()
+                    });
 
-					auto &cbox = variant.glyphs.back().cbox;
 					/*
+					auto &cbox = variant.glyphs.back().cbox;
 					cout << "Codepoint: " << cp << ", " << "glyph: " << glyph_index << " " << "at size " << size << ": "
 						 << "width: "     << cbox.width << ", " << "height: "  << cbox.rows  << ", "
 						 << "left: "      << cbox.left  << ", " << "top: "     << cbox.top   << ", "
@@ -270,8 +259,10 @@ int main(int argc, const char *argv[])
 					pixels.resize(pixel_base + bitmap.width * bitmap.rows);
 					auto dit = pixels.begin() + pixel_base;
 					auto sit = bitmap.buffer;
-					for (int i = 0; i < bitmap.rows; i++, sit += bitmap.pitch)
-						for (int j = 0; j < bitmap.width; j++) *dit++ = sit[j];
+                    for (auto j = 0U; j < bitmap.rows; j++, sit += bitmap.pitch)
+                    {
+                        for (auto k = 0U; k < bitmap.width; k++) *dit++ = sit[k];
+                    }
 
 				} // each character in the range
 

@@ -24,8 +24,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/
 
 # GPC Fonts
 
-find_package(libgpcfonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
-target_link_libraries(${PROJECT_NAME} libgpcfonts)
+#find_package(libgpcfonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
+
+add_subdirectory(external/libGPCFonts)
+target_link_libraries(${PROJECT_NAME} libGPCFonts)
 
 # Boost
 
