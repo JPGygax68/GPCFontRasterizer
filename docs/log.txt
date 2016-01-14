@@ -1,3 +1,9 @@
+2016-01-11
+==========
+
+- TODO: consume GPC Fonts as a git submodule
+
+
 2014-12-26
 ==========
 
