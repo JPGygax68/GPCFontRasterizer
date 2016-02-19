@@ -100,6 +100,7 @@ int main(int argc, const char *argv[])
 
         string font_file, output_file;
 		set<uint16_t> sizes;
+        bool full_range = false;
 
         // Get command-line arguments
         for (auto i = 1; i < argc; i ++) {
@@ -116,6 +117,10 @@ int main(int argc, const char *argv[])
 			else if (name == "output") {
 				output_file = value;
 			}
+            else if (name == "range")
+            {
+                if (value == "all") full_range = true;
+            }
             else {
                 throw runtime_error(string("invalid parameter \"") + argv[i] + "\"");
             }
@@ -173,11 +178,13 @@ int main(int argc, const char *argv[])
 
         // Find out what glyphs can be found in this font file
 
-		for (uint32_t cp = 32; cp <= 255; cp++) {
-
+        uint32_t start_cp = full_range ? 1 : 32, end_cp = full_range ? 0x10ffff : 255;
+		for (uint32_t cp = start_cp; cp <= end_cp; cp++)
+        {
 			FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
-			if (glyph_index > 0) {
 
+			if (glyph_index > 0)
+            {
 				// Add this codepoint to the range, or begin a new range
 				if (cp > next_codepoint) rast_font.index.emplace_back<character_range>({ cp, 0 });
 				character_range &range = rast_font.index.back();
@@ -186,7 +193,7 @@ int main(int argc, const char *argv[])
 				glyph_count++;
 			}
 			else {
-				cout << "No glyph for codepoint " << cp << endl;
+				if (!full_range) cout << "No glyph for codepoint " << cp << endl;
 				missing_count++;
 			}
 		}
@@ -202,12 +209,12 @@ int main(int argc, const char *argv[])
 		int max_descender = 0;
 		auto i_size = 0;
 
-		for (auto size : sizes) {
-
-			for (auto const &range : rast_font.index) {
-
-                for (size_t i = 0; i < range.count; i++) {
-
+		for (auto size : sizes)
+        {
+			for (auto const &range : rast_font.index)
+            {
+                for (size_t i = 0; i < range.count; i++)
+                {
                     // Codepoint
                     uint32_t cp = range.starting_codepoint + i;
 
@@ -271,7 +278,7 @@ int main(int argc, const char *argv[])
 			cout << endl;
 			cout << "Size " << size << ":" << endl;
 			cout << "Total number of pixels: " << rast_font.variants[i_size].pixels.size() << endl; // TODO: multiple variants
-			cout << "Max ascender:           " << max_ascender << endl;
+			cout << "Max ascender:           " << max_ascender  << endl;
 			cout << "Max descender:          " << max_descender << endl;
 
 			// Next size
