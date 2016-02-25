@@ -1,3 +1,0 @@
-[submodule "rasterizer/external/libGPCFonts"]
-	path = rasterizer/external/libGPCFonts
-	url = git@github.com:JPGygax68/libGPCFonts.git
