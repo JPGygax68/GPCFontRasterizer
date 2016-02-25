@@ -1,0 +1,6 @@
+[submodule "rasterizer/external/zlib"]
+	path = rasterizer/external/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "rasterizer/external/libGPCFonts"]
+	path = rasterizer/external/libGPCFonts
+	url = git@github.com:JPGygax68/libGPCFonts.git

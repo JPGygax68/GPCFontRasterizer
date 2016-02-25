@@ -24,9 +24,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/
 
 # GPC Fonts
 
-#find_package(libgpcfonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
+#find_package(libGPCFonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
 
-add_subdirectory(external/libGPCFonts)
+#add_subdirectory(external/libGPCFonts)
+if (NOT TARGET libGPCFonts)
+    message(FATAL_ERROR "libGPCFonts is not defined as a target")
+endif()
 target_link_libraries(${PROJECT_NAME} libGPCFonts)
 
 # Boost
@@ -38,13 +41,21 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
 
 # FreeType
 
-find_package(freetype REQUIRED)
+if (NOT TARGET libGPCFonts)
+    add_subdirectory("external/libGPCFonts")
+    if (NOT TARGET libGPCFonts)
+        message(FATAL_ERROR "failed to obtain libGPCFonts target from subdirectory")
+    endif()
+endif()
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 #target_link_libraries(${PROJECT_NAME} freetype)
 
 # Also required for FreeType
-find_package(zlib REQUIRED)
+add_subdirectory("external/zlib")
+if (NOT TARGET zlib)
+    message(FATAL_ERROR "zlib is not defined as a target")
+endif()
 target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
@@ -60,12 +71,12 @@ enable_testing()
 # Exporting the build tree
 #
 
+if (0)
 export(TARGETS ${PROJECT_NAME} FILE "${PROJECT_NAME}-targets.cmake")
 
 # Export the package for use from the build tree
 # (registers the build tree with a global CMake registry)
 export(PACKAGE ${PROJECT_NAME})
-
 
 # Create a config file for build tree usage:
 set(TARGET "${PROJECT_NAME}")
@@ -74,11 +85,13 @@ set(TARGET_LIB_DIR     ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(TARGET_CMAKE_DIR   ${CMAKE_CURRENT_BINARY_DIR})
 set(TARGET_EXECUTABLE  ${PROJECT_NAME})
 configure_file("config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" @ONLY)
+endif()
 
 #------------------------------------------------
 # Installing
 #
 
+if (0)
 # Note: we use "gpc" as a vendor prefix (subdir in include directory e.a.)
 # TODO: define prefixes in parent CMake list ?
 
@@ -89,3 +102,4 @@ install(TARGETS ${PROJECT_NAME}
 
  # Install the export set for use with the install-tree
 install(EXPORT ${PROJECT_NAME} DESTINATION cmake)
+endif()
