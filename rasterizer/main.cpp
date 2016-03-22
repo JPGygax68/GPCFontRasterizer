@@ -186,8 +186,8 @@ int main(int argc, const char *argv[])
 			if (glyph_index > 0)
             {
 				// Add this codepoint to the range, or begin a new range
-				if (cp > next_codepoint) rast_font.index.emplace_back<character_range>({ cp, 0 });
-				character_range &range = rast_font.index.back();
+				if (cp > next_codepoint) rast_font.ranges.emplace_back<character_range>({ cp, 0 });
+				character_range &range = rast_font.ranges.back();
 				range.count++;
 				next_codepoint = cp + 1;
 				glyph_count++;
@@ -200,7 +200,7 @@ int main(int argc, const char *argv[])
 
 		cout << endl;
 		cout << "Total number of glyphs: " << glyph_count << endl;
-		cout << "Number of char ranges:  " << rast_font.index.size() << endl;
+		cout << "Number of char ranges:  " << rast_font.ranges.size() << endl;
 		cout << "Missing codepoints:     " << missing_count << endl;
 
 		// Repeat for each pixel size
@@ -211,7 +211,7 @@ int main(int argc, const char *argv[])
 
 		for (auto size : sizes)
         {
-			for (auto const &range : rast_font.index)
+			for (auto const &range : rast_font.ranges)
             {
                 for (size_t i = 0; i < range.count; i++)
                 {
