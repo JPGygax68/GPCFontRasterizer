@@ -39,6 +39,7 @@ THE SOFTWARE.
 
 #include <gpc/fonts/rasterized_glyph_cbox.hpp>
 #include <gpc/fonts/character_range.hpp>
+#include <gpc/fonts/character_set.hpp>
 #include <gpc/fonts/rasterized_font.hpp>
 #include <gpc/fonts/cereal.hpp>
 
@@ -100,6 +101,7 @@ int main(int argc, const char *argv[])
 
         string font_file, output_file;
 		set<uint16_t> sizes;
+        gpc::fonts::character_set char_set;
         bool full_range = false;
 
         // Get command-line arguments
@@ -119,7 +121,22 @@ int main(int argc, const char *argv[])
 			}
             else if (name == "range")
             {
-                if (value == "all") full_range = true;
+                size_t j = 0, k;
+                for (; ;)
+                {
+                    k = value.find(',');
+                    auto v = value.substr(j, k == std::string::npos ? k : k - j);
+                    if (v == "all" || v == "full" || v == "complete")
+                    {
+                        char_set.add(1, 0x10ffff);
+                        full_range = true;
+                        std::cout << "Including complete Unicode rage (disabling warnings for missing glyphs)" << std::endl;
+                    }
+
+                    if (k == std::string::npos) break;
+
+                    j = k + 1;
+                }
             }
             else {
                 throw runtime_error(string("invalid parameter \"") + argv[i] + "\"");
@@ -129,6 +146,8 @@ int main(int argc, const char *argv[])
         if (font_file.empty()) throw runtime_error("No font file specified!");
 		if (sizes.empty()) throw runtime_error("No sizes specified!");
 		if (output_file.empty()) throw runtime_error("No output file specified!");
+
+        if (char_set.ranges().empty()) char_set.add(32, 255); // extended Latin or whatever
 
         FT_Library library;
         FT_Error fterror;
@@ -178,25 +197,27 @@ int main(int argc, const char *argv[])
 
         // Find out what glyphs can be found in this font file
 
-        uint32_t start_cp = full_range ? 1 : 32, end_cp = full_range ? 0x10ffff : 255;
-		for (uint32_t cp = start_cp; cp <= end_cp; cp++)
+        for (auto &range: char_set.ranges())
         {
-			FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
-
-			if (glyph_index > 0)
+		    for (uint32_t cp = range.starting_codepoint; cp <= range.starting_codepoint + range.count; cp++)
             {
-				// Add this codepoint to the range, or begin a new range
-				if (cp > next_codepoint) rast_font.ranges.emplace_back<character_range>({ cp, 0 });
-				character_range &range = rast_font.ranges.back();
-				range.count++;
-				next_codepoint = cp + 1;
-				glyph_count++;
-			}
-			else {
-				if (!full_range) cout << "No glyph for codepoint " << cp << endl;
-				missing_count++;
-			}
-		}
+			    FT_UInt glyph_index = FT_Get_Char_Index(face, cp);
+
+			    if (glyph_index > 0)
+                {
+				    // Add this codepoint to the range, or begin a new range
+				    if (cp > next_codepoint) rast_font.ranges.emplace_back<character_range>({ cp, 0 });
+				    character_range &out_range = rast_font.ranges.back();
+				    out_range.count++;
+				    next_codepoint = cp + 1;
+				    glyph_count++;
+			    }
+			    else {
+				    if (!full_range) cout << "No glyph for codepoint " << cp << endl;
+				    missing_count++;
+			    }
+		    }
+        }
 
 		cout << endl;
 		cout << "Total number of glyphs: " << glyph_count << endl;
