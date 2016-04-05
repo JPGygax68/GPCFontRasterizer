@@ -132,6 +132,11 @@ int main(int argc, const char *argv[])
                         full_range = true;
                         std::cout << "Including complete Unicode rage (disabling warnings for missing glyphs)" << std::endl;
                     }
+                    else if (v[0] == '$')
+                    {
+                        auto cp = std::stoi(v.substr(1), nullptr, 16);
+                        char_set.add(cp, 1);
+                    }
 
                     if (k == std::string::npos) break;
 
