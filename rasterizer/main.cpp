@@ -99,10 +99,13 @@ int main(int argc, const char *argv[])
 
     try {
 
-        string font_file, output_file;
-		set<uint16_t> sizes;
-        gpc::fonts::character_set char_set;
-        bool full_range = false;
+        // Parameters
+        string                      font_file;
+        string                      output_file;
+        bool                        hexify = false;         // "hexify" the output, i.e. emit comma-separated C-style hex constants
+		set<uint16_t>               sizes;
+        gpc::fonts::character_set   char_set;
+        bool                        full_range = false;
 
         // Get command-line arguments
         for (auto i = 1; i < argc; i ++) {
@@ -114,11 +117,16 @@ int main(int argc, const char *argv[])
 				font_file = findFontFile(value);
             }
 			else if (name == "size") {
-				sizes.insert((int16_t)stoi(value));
+				sizes.insert( static_cast<uint16_t>(stoi(value)) );
 			}
-			else if (name == "output") {
+			else if (name == "output") 
+            {
 				output_file = value;
 			}
+            else if (name == "hexify")
+            {
+                hexify = true;
+            }
             else if (name == "range")
             {
                 size_t j = 0, k;
@@ -313,10 +321,16 @@ int main(int argc, const char *argv[])
 		} // each pixel size
 
 		// Serialize the result to the output file
-		ofstream os(output_file, ios_base::binary);
-        cereal::BinaryOutputArchive archive(os);
+        std::unique_ptr<ostream> os;
+        if (hexify) os.reset( new std::stringstream{ ios_base::binary | ios_base::in | ios_base::out } );
+        else        os.reset( new ofstream{ output_file, ios_base::binary } );
+        cereal::BinaryOutputArchive archive(*os);
         archive(rast_font);
 
+        if (hexify)
+        {
+            
+        }
         cout << "Done." << endl;
 
 		exit_code = 0;
