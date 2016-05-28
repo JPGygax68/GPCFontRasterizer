@@ -25,7 +25,6 @@ THE SOFTWARE.
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <cstdint>
 #include <set>
 
 #include <boost/filesystem.hpp>
@@ -344,7 +343,7 @@ int main(int argc, const char *argv[])
             for (auto it = istream_iterator<uint8_t>{is}; it != istream_iterator<uint8_t>{}; ++it)
             {
                 if (++num % 16 == 0) os << endl;
-                if (num > 0) os << ", ";
+                if (num > 1) os << ", ";
                 os << "0x" << ios::hex << *it;
             }
         }
