@@ -90,6 +90,8 @@ static auto findFontFile(const std::string &file) -> std::string {
 
 int main(int argc, const char *argv[])
 {
+    enum Open_mode { undefined, append, truncate };
+
     using namespace std;
 	using gpc::fonts::rasterized_glyph_cbox;
     using gpc::fonts::character_range;
@@ -103,6 +105,7 @@ int main(int argc, const char *argv[])
         string                      font_file;
         string                      output_file;
         bool                        hexify = false;         // "hexify" the output, i.e. emit comma-separated C-style hex constants
+        Open_mode                   open_mode = undefined;               
 		set<uint16_t>               sizes;
         gpc::fonts::character_set   char_set;
         bool                        full_range = false;
@@ -125,7 +128,15 @@ int main(int argc, const char *argv[])
 			}
             else if (name == "hexify")
             {
+                if (!value.empty()) throw std::runtime_error("The \"hexify\" option cannot have a value");
                 hexify = true;
+            }
+            else if (name == "openmode")
+            {
+                if      (value == "append"  ) open_mode = append;
+                else if (value == "truncate") open_mode = truncate;
+                else
+                    throw std::runtime_error("Unsupported value \""s + value + "\" for \"openmode\" open: must be \"append\" or \"truncate\"");
             }
             else if (name == "range")
             {
@@ -321,15 +332,27 @@ int main(int argc, const char *argv[])
 		} // each pixel size
 
 		// Serialize the result to the output file
-        std::unique_ptr<ostream> os;
-        if (hexify) os.reset( new std::stringstream{ ios_base::binary | ios_base::in | ios_base::out } );
-        else        os.reset( new ofstream{ output_file, ios_base::binary } );
-        cereal::BinaryOutputArchive archive(*os);
-        archive(rast_font);
 
         if (hexify)
         {
-            
+            auto is = stringstream{ ios_base::binary | ios_base::in | ios_base::out };
+            cereal::BinaryOutputArchive archive(is);
+            archive(rast_font);
+
+            ofstream os { output_file, open_mode == truncate ? ios::trunc : ios::app };
+            unsigned int num = 0;
+            for (auto it = istream_iterator<uint8_t>{is}; it != istream_iterator<uint8_t>{}; ++it)
+            {
+                if (++num % 16 == 0) os << endl;
+                if (num > 0) os << ", ";
+                os << "0x" << ios::hex << *it;
+            }
+        }
+        else
+        {
+            ofstream os { output_file, ios_base::binary | (open_mode == append ? ios::app : ios::trunc) };
+            cereal::BinaryOutputArchive archive(os);
+            archive(rast_font);
         }
         cout << "Done." << endl;
 
