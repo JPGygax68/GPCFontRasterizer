@@ -20,28 +20,19 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Libraries
 #
 
-if (1)
-# Everything provided by the Conan package manager
+# Boost (via Conan)
+
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_BOOST})
-else()
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_BOOST})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_BOOST})
-endif()
+
+# GPC Fonts (via Conan) do not require any configuration, as it's header-only and conan already adds all include dirs
 
 # Cereal (header-only)
 
+if (0)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/cereal/include )
-
-# GPC Fonts
-
-add_subdirectory(external/libGPCFonts)
-#find_package(libGPCFonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
-
-#add_subdirectory(external/libGPCFonts)
-if (NOT TARGET libGPCFonts)
-    message(FATAL_ERROR "libGPCFonts is not defined as a target")
+else()
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_CEREAL})
 endif()
-target_link_libraries(${PROJECT_NAME} libGPCFonts)
 
 # Boost
 
@@ -50,15 +41,6 @@ set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
-endif()
-
-# libGPCFonts
-
-if (NOT TARGET libGPCFonts)
-    add_subdirectory("external/libGPCFonts")
-    if (NOT TARGET libGPCFonts)
-        message(FATAL_ERROR "failed to obtain libGPCFonts target from subdirectory")
-    endif()
 endif()
 
 # FreeType: get the one we built as part of our prereqs
