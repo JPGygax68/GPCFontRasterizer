@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include <gpc/fonts/character_set.hpp>
 #include <gpc/fonts/rasterized_font.hpp>
 #include <gpc/fonts/cereal.hpp>
+#include <iomanip>
 
 typedef std::pair<std::string, std::string> NameValuePair;
 
@@ -334,22 +335,23 @@ int main(int argc, const char *argv[])
 
         if (hexify)
         {
-            auto is = stringstream{ ios_base::binary | ios_base::in | ios_base::out };
+            auto is = stringstream{ ios::binary | ios::in | ios::out };
+            is << std::noskipws;
             cereal::BinaryOutputArchive archive(is);
             archive(rast_font);
 
-            ofstream os { output_file, open_mode == truncate ? ios_base::trunc : ios_base::app };
+            ofstream os { output_file, open_mode == truncate ? ios::trunc : ios::app };
             unsigned int num = 0;
-            for (auto it = istream_iterator<uint8_t>{is}; it != istream_iterator<uint8_t>{}; ++it)
+            for (auto it = istream_iterator<uint8_t>{is}; it != istream_iterator<uint8_t>{}; ++it, num++)
             {
-                if (++num % 16 == 0) os << endl;
-                if (num > 1) os << ", ";
-                os << "0x" << std::hex << static_cast<unsigned int>(*it);
+                if (num > 0) os << ", ";
+                if (num > 0 && num % 16 == 0) os << endl;
+                os << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned int>(*it);
             }
         }
         else
         {
-            ofstream os { output_file, ios_base::binary | (open_mode == append ? ios::app : ios::trunc) };
+            ofstream os { output_file, ios::binary | (open_mode == append ? ios::app : ios::trunc) };
             cereal::BinaryOutputArchive archive(os);
             archive(rast_font);
         }

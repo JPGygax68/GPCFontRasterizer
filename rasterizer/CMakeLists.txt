@@ -24,6 +24,13 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_BOOST})
 
+if (0)
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
+endif()
+
 # GPC Fonts (via Conan) do not require any configuration, as it's header-only and conan already adds all include dirs
 
 # Cereal (header-only)
@@ -34,22 +41,18 @@ else()
 target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_CEREAL})
 endif()
 
-# Boost
-
-if (0)
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
-endif()
-
 # FreeType: get the one we built as part of our prereqs
 
+if (1)
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_FREETYPE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_FREETYPE})
+else()
 #set(ENV{FREETYPE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../prereqs/install/freetype)
 find_package(Freetype REQUIRED)
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 #target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 #target_link_libraries(${PROJECT_NAME} freetype)
+endif()
 
 if (0)
 # Also required for FreeType
