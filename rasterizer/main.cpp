@@ -338,13 +338,13 @@ int main(int argc, const char *argv[])
             cereal::BinaryOutputArchive archive(is);
             archive(rast_font);
 
-            ofstream os { output_file, open_mode == truncate ? ios::trunc : ios::app };
+            ofstream os { output_file, open_mode == truncate ? ios_base::trunc : ios_base::app };
             unsigned int num = 0;
             for (auto it = istream_iterator<uint8_t>{is}; it != istream_iterator<uint8_t>{}; ++it)
             {
                 if (++num % 16 == 0) os << endl;
                 if (num > 1) os << ", ";
-                os << "0x" << ios::hex << *it;
+                os << "0x" << std::hex << static_cast<unsigned int>(*it);
             }
         }
         else
