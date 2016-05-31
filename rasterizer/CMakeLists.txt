@@ -9,8 +9,10 @@ cmake_minimum_required(VERSION 3.4)
 
 project(gpcfontrasterizer)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+if (EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+  include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+  conan_basic_setup()
+endif()
 
 file(GLOB SOURCES *.cpp)
 
@@ -23,6 +25,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Boost (via Conan)
 
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_BOOST})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_BOOST})
 
 if (0)
 set(Boost_USE_STATIC_LIBS ON)
