@@ -1,3 +1,0 @@
-[submodule "rasterizer/external/zlib"]
-	path = rasterizer/external/zlib
-	url = https://github.com/madler/zlib.git
