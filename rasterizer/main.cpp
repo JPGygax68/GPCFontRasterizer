@@ -45,8 +45,8 @@ THE SOFTWARE.
 
 typedef std::pair<std::string, std::string> NameValuePair;
 
-static auto splitParam(const std::string &param) -> NameValuePair {
-
+static auto splitParam(const std::string &param) -> NameValuePair 
+{
     auto p = param.find_first_of('=');
     std::string name, value;
 
@@ -61,8 +61,8 @@ static auto splitParam(const std::string &param) -> NameValuePair {
     return std::move( NameValuePair(name, value) );
 }
 
-static auto findFontFile(const std::string &file) -> std::string {
-
+static auto findFontFile(const std::string &file) -> std::string
+{
     using std::string;
     using std::runtime_error;
     using namespace boost::filesystem;
