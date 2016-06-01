@@ -9,8 +9,10 @@ cmake_minimum_required(VERSION 3.4)
 
 project(gpcfontrasterizer)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+if (EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+  include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+  conan_basic_setup()
+endif()
 
 file(GLOB SOURCES *.cpp)
 
@@ -23,6 +25,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Boost (via Conan)
 
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_BOOST})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_BOOST})
 
 if (0)
 set(Boost_USE_STATIC_LIBS ON)
@@ -31,38 +34,21 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
 endif()
 
-# GPC Fonts (via Conan) do not require any configuration, as it's header-only and conan already adds all include dirs
+# zlib (via Conan)
 
-# Cereal (header-only)
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_ZLIB})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_ZLIB})
 
-if (0)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/cereal/include )
-else()
+# libGPCFonts (via Conan) does not require any configuration, as it's header-only and conan already adds all include dirs
+
+# Cereal (header-only, via Conan)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_CEREAL})
-endif()
 
-# FreeType: get the one we built as part of our prereqs
+# FreeType (via Conan)
 
-if (1)
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_FREETYPE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_FREETYPE})
-else()
-#set(ENV{FREETYPE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../prereqs/install/freetype)
-find_package(Freetype REQUIRED)
-target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
-#target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
-#target_link_libraries(${PROJECT_NAME} freetype)
-endif()
-
-if (0)
-# Also required for FreeType
-add_subdirectory("external/zlib")
-if (NOT TARGET zlib)
-    message(FATAL_ERROR "zlib is not defined as a target")
-endif()
-target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
-endif()
 
 #-----------------------------------------------
 # Testing
