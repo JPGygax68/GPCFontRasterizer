@@ -149,7 +149,7 @@ int main(int argc, const char *argv[])
                     {
                         char_set.add(1, 0x10ffff);
                         full_range = true;
-                        std::cout << "Including complete Unicode rage (disabling warnings for missing glyphs)" << std::endl;
+                        std::cout << "Including complete Unicode range (disabling warnings for missing glyphs)" << std::endl;
                     }
                     else if (v[0] == '$')
                     {
