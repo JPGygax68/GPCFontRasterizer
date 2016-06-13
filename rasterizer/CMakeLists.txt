@@ -22,33 +22,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Libraries
 #
 
-# Boost (via Conan)
+# Conan-imported libraries:
+# Boost, FreeType, libGPCFonts, Cereal
 
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_BOOST})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_BOOST})
-
-if (0)
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
-endif()
-
-# zlib (via Conan)
-
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_ZLIB})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_ZLIB})
-
-# libGPCFonts (via Conan) does not require any configuration, as it's header-only and conan already adds all include dirs
-
-# Cereal (header-only, via Conan)
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_CEREAL})
-
-# FreeType (via Conan)
-
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS_FREETYPE})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS_FREETYPE})
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS})
 
 #-----------------------------------------------
 # Testing
