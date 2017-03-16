@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 3.4)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindFreetype.cmake)
-
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+#include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindFreetype.cmake)
+#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 #------------------------------------------------
 # Target: executable
 #
 
 project(gpcfontrasterizer)
+
+if (EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+  include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+  conan_basic_setup()
+endif()
 
 file(GLOB SOURCES *.cpp)
 
@@ -18,51 +22,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Libraries
 #
 
-# Cereal (header-only)
+# Conan-imported libraries:
+# Boost, FreeType, libGPCFonts, Cereal
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/cereal/include )
-
-# GPC Fonts
-
-#find_package(libGPCFonts REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
-
-#add_subdirectory(external/libGPCFonts)
-if (NOT TARGET libGPCFonts)
-    message(FATAL_ERROR "libGPCFonts is not defined as a target")
-endif()
-target_link_libraries(${PROJECT_NAME} libGPCFonts)
-
-# Boost
-
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
-
-# libGPCFonts
-
-if (NOT TARGET libGPCFonts)
-    add_subdirectory("external/libGPCFonts")
-    if (NOT TARGET libGPCFonts)
-        message(FATAL_ERROR "failed to obtain libGPCFonts target from subdirectory")
-    endif()
-endif()
-
-# FreeType: get the one we built as part of our prereqs
-
-set(ENV{FREETYPE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../prereqs/install/freetype)
-find_package(Freetype REQUIRED)
-target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
-#target_link_libraries(${PROJECT_NAME} freetype)
-
-# Also required for FreeType
-add_subdirectory("external/zlib")
-if (NOT TARGET zlib)
-    message(FATAL_ERROR "zlib is not defined as a target")
-endif()
-target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CONAN_INCLUDE_DIRS})
 
 #-----------------------------------------------
 # Testing
